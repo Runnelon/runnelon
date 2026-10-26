@@ -1,0 +1,38 @@
+[package]
+name = "runnelon"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+description = "Open-source reverse proxy and API gateway (early development)"
+readme = "../README.md"
+keywords = ["proxy", "gateway", "reverse-proxy"]
+categories = ["network-programming", "command-line-utilities"]
+
+[[bin]]
+name = "runnelon"
+path = "src/main.rs"
+
+[dependencies]
+arc-swap = "1"
+async-trait = "0.1"
+bytes = "1"
+clap = { version = "4.5", features = ["derive"] }
+env_logger = "0.11"
+log = "0.4"
+# Pingora 0.9.0 builds accepted connections with tokio's zero-capacity
+# `BufStream::with_capacity(0, 0)`; tokio 1.54.0 started panicking on that
+# ("capacity must be greater than zero"), which kills the proxy service thread
+# on the first accept. Cargo.lock therefore pins tokio 1.53.x. Do not run
+# `cargo update -p tokio` until Pingora ships a fix; the e2e suite fails loudly
+# if the pin is lost.
+pingora = { version = "0.9.0", features = ["proxy", "openssl"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1"
+serde_yaml = "0.9"
+thiserror = "2.0"
+
+[dev-dependencies]
+assert_cmd = "2.0"
+predicates = "3.1"
+tempfile = "3.14"

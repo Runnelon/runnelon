@@ -1,0 +1,56 @@
+# Runnelon config — schema version 1
+# Edits are picked up within ~500 ms; listener and management changes need a restart.
+# This is a working example format. Adjust addresses for your environment.
+version: 1
+
+listeners:
+  - address: "127.0.0.1:8080"
+  # Optional TLS listener (one certificate per listener; restart to rotate):
+  # - address: "127.0.0.1:8443"
+  #   tls:
+  #     cert_path: "/etc/runnelon/tls/cert.pem"
+  #     key_path: "/etc/runnelon/tls/key.pem"
+
+routes:
+  # Longer path_prefix wins. Host is case-insensitive; use "*" for any host.
+  - host: "app.local"
+    path_prefix: "/api"
+    upstream: "api"
+  - host: "app.local"
+    path_prefix: "/"
+    upstream: "web"
+  - host: "*"
+    path_prefix: "/"
+    upstream: "web"
+
+upstreams:
+  api:
+    endpoints:
+      - "127.0.0.1:3001"
+    # weights: {"127.0.0.1:3001": 1}   # optional per-endpoint weight; total schedule ≤ 1024
+    unhealthy_cooldown_ms: 5000        # optional; skip after connect failure (0 disables)
+    connect_timeout_ms: 5000
+    read_timeout_ms: 30000
+    write_timeout_ms: 30000
+  web:
+    endpoints:
+      - "127.0.0.1:3000"
+
+# Optional global request limits. Defaults to 1 MiB when omitted; must be > 0.
+limits:
+  max_request_body_bytes: 1048576
+
+# Optional Docker discovery (read-only Engine API). May replace static routes.
+# docker:
+#   socket: "/var/run/docker.sock"
+#   poll_interval_ms: 2000
+
+# Optional loopback management listener for /healthz, /readyz and /metrics.
+# management:
+#   address: "127.0.0.1:9090"
+
+# Optional: preserve inbound X-Forwarded-For chains only from these peers.
+# Leave empty (default) to always discard client-supplied chains.
+trusted_proxies: []
+  # - "10.0.0.0/8"
+  # - "192.0.2.7"
